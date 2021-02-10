@@ -5,9 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Http;
 using System.Web;
 using System.Text;
+using System.Collections;
+using System;
+
 
 
 //using Microsoft.AspNetCore.
@@ -48,16 +52,49 @@ namespace ProxyRest.Controllers
 		}
 
 		[HttpPost]
-		public static async Task<string> Post(/*HttpContent content*/)
+		public async Task<string> Post(/*HttpContent content*/)
 		{
 			var httpRequestMessage = new HttpRequestMessage();
 			HttpClient client = new HttpClient();
-			HttpContent content = new StringContent("pJsonContent", Encoding.UTF8, "application/json");
+			
+		
+			string body = Request.Body.ToString();
+			foreach (var header in Request.Headers)
+			{
+				string headername = header.ToString();
+				//client.DefaultRequestHeaders.TryAddWithoutValidation(headername, Request.Headers[headername].ToString());
+				if (headername == "ApiKey")
+				{
+					client.DefaultRequestHeaders.Add(headername, Request.Headers[headername].ToString());
+				}
+				//client.DefaultRequestHeaders.Add("ApiKey", Request.Headers["ApiKey"].ToString());
+
+			}
+
+			string name1 = "ApiKey";
+			string name2 = "ApiKey333";
+			client.DefaultRequestHeaders.Add("ApiKey", Request.Headers["ApiKey"].ToString());
+			//client.DefaultRequestHeaders.Add(name1, Request.Headers[name2].ToString());
+			HttpContent content = new StringContent(body, Encoding.UTF8);
 			httpRequestMessage.Content = content;
+
+			//client.DefaultRequestHeaders.Add("ApiKey", Request.Headers["ApiKey"].ToString());
+			/*
+		for (int i = 0; i < Request.Headers.Count; i++)
+		{
+			Console.WriteLine(Request.Headers[i]));
+		}*/
+			
+
+			
+			//RequestHeaders
+
+			//HttpHeaders headers = HttpRequestHeaders;
+
 
 			//var content = "new FormUrlEncodedContent(values)";
 
-			var response = await client.PostAsync("http://www.example.com/recepticle.aspx", content);
+			var response = await client.PostAsync("http://localhost:8081/ObjectToGit", content);
 
 			var responseString = await response.Content.ReadAsStringAsync();
 
@@ -110,7 +147,7 @@ namespace ProxyRest.Controllers
 			//string result = await this.Request.Content.ReadAsStringAsync();
 			//return responseString;
 
-			return await client.SendAsync(httpRequestMessage).ToString();
+			return responseString;  //responseString.ToString();
 
 
 
