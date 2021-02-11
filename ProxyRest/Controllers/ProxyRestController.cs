@@ -1,21 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using Microsoft.AspNetCore.Http;
-using System.Web;
 using System.Text;
-using System.Collections;
-using System;
-
-
-
-//using Microsoft.AspNetCore.
-
+using System.IO;
+using Microsoft.Extensions.Configuration;
 
 namespace ProxyRest.Controllers
 {
@@ -23,6 +11,14 @@ namespace ProxyRest.Controllers
     [Route("Redirect")]
 	public class ProxyRestController : ControllerBase
 	{
+
+		private readonly IConfiguration Configuration;
+
+		public ProxyRestController(IConfiguration configuration)
+		{
+			Configuration = configuration;
+		}
+
 		[HttpGet]
 		public string Get()
 		{
@@ -52,104 +48,34 @@ namespace ProxyRest.Controllers
 		}
 
 		[HttpPost]
-		public async Task<string> Post(/*HttpContent content*/)
+		public async Task<string> Post()
 		{
 			var httpRequestMessage = new HttpRequestMessage();
 			HttpClient client = new HttpClient();
-			
-		
-			string body = Request.Body.ToString();
-			foreach (var header in Request.Headers)
-			{
-				string headername = header.ToString();
-				//client.DefaultRequestHeaders.TryAddWithoutValidation(headername, Request.Headers[headername].ToString());
-				if (headername == "ApiKey")
-				{
-					client.DefaultRequestHeaders.Add(headername, Request.Headers[headername].ToString());
-				}
-				//client.DefaultRequestHeaders.Add("ApiKey", Request.Headers["ApiKey"].ToString());
+			string body;
+			var Urllocalgit = Configuration["UrlLocalGit"];
 
+			using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
+			{
+				body = await reader.ReadToEndAsync();
 			}
 
-			string name1 = "ApiKey";
-			string name2 = "ApiKey333";
-			client.DefaultRequestHeaders.Add("ApiKey", Request.Headers["ApiKey"].ToString());
-			//client.DefaultRequestHeaders.Add(name1, Request.Headers[name2].ToString());
+
+			foreach (var header in Request.Headers)
+			{
+				if (!header.Key.ToString().Contains("Content"))
+				{
+					client.DefaultRequestHeaders.Add(header.Key.ToString(), header.Value.ToString());
+				}
+			}
+
 			HttpContent content = new StringContent(body, Encoding.UTF8);
 			httpRequestMessage.Content = content;
 
-			//client.DefaultRequestHeaders.Add("ApiKey", Request.Headers["ApiKey"].ToString());
-			/*
-		for (int i = 0; i < Request.Headers.Count; i++)
-		{
-			Console.WriteLine(Request.Headers[i]));
-		}*/
-			
-
-			
-			//RequestHeaders
-
-			//HttpHeaders headers = HttpRequestHeaders;
-
-
-			//var content = "new FormUrlEncodedContent(values)";
-
-			var response = await client.PostAsync("http://localhost:8081/ObjectToGit", content);
-
+			var response = await client.PostAsync(Urllocalgit, content);
 			var responseString = await response.Content.ReadAsStringAsync();
 
-			/*var req = context.HttpContext.Request;
-			var request = context.HttpContext.Request;
-			var stream = new StreamReader(request.Body);
-			var body = stream.ReadToEnd();
-
-			HttpContext.Request.
-
-			HttpContent requestContent = Request.Content;
-			string jsonContent = requestContent.ReadAsStringAsync().Result;
-
-			//находим входящий GET-запрос
-			string query = this.Request.QueryString.ToString();
-			//Task<string> content;
-			HttpContent content;
-
-			var httpContent = this.Request.GetTypeContent;
-			content = this.Request.Query.
-
-			if (string.IsNullOrEmpty(query))
-			{
-				return "Не введен адреса запроса";
-			}
-
-			//отсекаем первый ?
-			string address_url = query;
-			HttpClient client = new HttpClient();
-
-			try
-			{
-				//HttpResponseMessage
-				HttpResponseMessage result = client.PostAsync("url1", content);
-				//await client.PostAsync.(this.Request, content); 
-				return result.ToString();
-			}
-			catch
-			{
-				return "Ошибка запроса:" + "\n" + address_url;
-			};*/
-
-			//HttpClient client = new HttpClient();
-			//string query = this.Request.QueryString.ToString();
-
-			//HttpContent content = new StringContent("this.Request.QueryString.ToString()");
-			//HttpResponseMessage response = await client.PostAsync("url", content).ConfigureAwait(false);
-			//return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-			//string result = await this.Request.Content.ReadAsStringAsync();
-			//return responseString;
-
-			return responseString;  //responseString.ToString();
-
-
+			return responseString; 
 
 		}
 	}
