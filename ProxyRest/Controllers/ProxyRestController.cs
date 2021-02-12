@@ -4,6 +4,9 @@ using System.Net.Http;
 using System.Text;
 using System.IO;
 using Microsoft.Extensions.Configuration;
+using System;
+
+
 
 namespace ProxyRest.Controllers
 {
@@ -50,32 +53,43 @@ namespace ProxyRest.Controllers
 		[HttpPost]
 		public async Task<string> Post()
 		{
-			var httpRequestMessage = new HttpRequestMessage();
-			HttpClient client = new HttpClient();
 			string body;
+			HttpClient client = new HttpClient();
+			var httpRequestMessage = new HttpRequestMessage();
 			var Urllocalgit = Configuration["UrlLocalGit"];
-
-			using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
+			
+			try
 			{
-				body = await reader.ReadToEndAsync();
-			}
-
-
-			foreach (var header in Request.Headers)
-			{
-				if (!header.Key.ToString().Contains("Content"))
+				using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
 				{
-					client.DefaultRequestHeaders.Add(header.Key.ToString(), header.Value.ToString());
+					body = await reader.ReadToEndAsync();
 				}
 			}
+			catch
+			{
+				return "Ошибка считывания тела запроса";
+			}
 
+			try
+			{ 
+				foreach (var header in Request.Headers)
+				{
+					if (!header.Key.ToString().Contains("Content"))
+					{
+						client.DefaultRequestHeaders.Add(header.Key.ToString(), header.Value.ToString());
+					}
+				}
 			HttpContent content = new StringContent(body, Encoding.UTF8);
 			httpRequestMessage.Content = content;
 
 			var response = await client.PostAsync(Urllocalgit, content);
 			var responseString = await response.Content.ReadAsStringAsync();
-
-			return responseString; 
+		    return responseString;
+			}
+			catch (Exception ex)
+			{
+				return "Ошибка обработки запроса: " + ex.Message;
+			}
 
 		}
 	}
