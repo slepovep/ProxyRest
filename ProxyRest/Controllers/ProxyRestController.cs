@@ -75,41 +75,25 @@ namespace ProxyRest.Controllers
 			{ 
 				foreach (var header in Request.Headers)
 				{
-					/*if (header.Key.ToString().Contains("CommitMes"))  
+					string headervalue;
+					if ( header.Key.ToString().Contains("CommitMes") | header.Key.ToString().Contains("Directory") )
 					{
-
-						string commitmes = HttpUtility.HtmlEncode(Request.Headers["CommitMes"].ToString()); //обработка русских символов
-
-						Encoding utf8 = Encoding.GetEncoding("UTF-8");
-						Encoding win1251 = Encoding.GetEncoding("Windows-1251");
-
-						byte[] utf8Bytes = win1251.GetBytes(commitmes);
-						byte[] win1251Bytes = Encoding.Convert(utf8, win1251, utf8Bytes);
-
-						commitmes = win1251.GetString(win1251Bytes);
-
-						client.DefaultRequestHeaders.TryAddWithoutValidation(header.Key.ToString(), commitmes);
-						headerstr = headerstr + header.Key.ToString() + ": " + win1251Bytes + "\n";
+					   headervalue = Base64Encode(header.Value.ToString());
 					}
 					else
 					{
-						client.DefaultRequestHeaders.TryAddWithoutValidation(header.Key.ToString(), HttpUtility.HtmlEncode(header.Value)); 
-					}*/
-					//var utf8bytes = Encoding.UTF8.GetBytes(header.Value);
-					//string MessageSignatureValue = Encoding.ASCII.GetString(utf8bytes);
-					//client.DefaultRequestHeaders.TryAddWithoutValidation(header.Key.ToString(), MessageSignatureValue);
-						var header1 = header.Value.ToString();
-						client.DefaultRequestHeaders.TryAddWithoutValidation(header.Key.ToString(), HttpUtility.HtmlEncode(header1));
-						headerstr = headerstr + header.Key.ToString() + ": " + HttpUtility.HtmlEncode(header1) + "\n";
+						headervalue = header.Value;
+					}
+					client.DefaultRequestHeaders.TryAddWithoutValidation(header.Key.ToString(), headervalue);
+					headerstr = headerstr + header.Key.ToString() + ": " + headervalue + "\n";
 				}
-				//client.DefaultRequestHeaders.TryAddWithoutValidation("Content-Type", @"text/html; charset=windows-1251");
-
+				client.DefaultRequestHeaders.TryAddWithoutValidation("HeaderBase64", "1");  //добавляем параметр указывающий на кодировку заголовка
 				HttpContent content = new StringContent(body, Encoding.UTF8);
-			httpRequestMessage.Content = content;
+				httpRequestMessage.Content = content;
 
-			var response = await client.PostAsync(Urllocalgit, content);
-			var responseString = await response.Content.ReadAsStringAsync();
-		    return responseString;
+				var response = await client.PostAsync(Urllocalgit, content);
+				var responseString = await response.Content.ReadAsStringAsync();
+				return responseString;
 			}
 			catch (Exception ex)
 			{
@@ -117,43 +101,12 @@ namespace ProxyRest.Controllers
 			}
 
 		}
-		public string Encoding1251(string codein)
+
+		public static string Base64Encode(string plainText)
 		{
-			string codeout;
-			Encoding utf8 = Encoding.GetEncoding("UTF-8");
-			Encoding win1251 = Encoding.GetEncoding("Windows-1251");
-
-			Encoding ascii = Encoding.ASCII;
-			Encoding unicode = Encoding.Unicode;
-
-			byte[] unicodeBytes = unicode.GetBytes(codein);
-
-			// Perform the conversion from one encoding to the other.
-			byte[] asciiBytes = Encoding.Convert(unicode, ascii, unicodeBytes);
-
-			char[] asciiChars = new char[ascii.GetCharCount(asciiBytes, 0, asciiBytes.Length)];
-			ascii.GetChars(asciiBytes, 0, asciiBytes.Length, asciiChars, 0);
-			string asciiString = new string(asciiChars);
-
-
-
-			//byte[] win1251Bytes = win1251.GetBytes(codein);
-			//byte[] utf8Bytes = Encoding.Convert(utf8, win1251, win1251Bytes);
-
-			//codeout = win1251.GetString(utf8Bytes);
-			return asciiString;
-
+			var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
+			return System.Convert.ToBase64String(plainTextBytes);
 		}
-		/*
-		public string StringToAscii(string codein)
-		{
-			string codeout = "";
-			foreach (char c in codein)
-			{
-				codeout = codeout + Convert.ToInt32(c);
-			}
-			return codeout;
-		}*/
 
 	}
 }
